@@ -1,0 +1,628 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// ── DATA ──
+const BINYANS = ['קַל', 'נִפְעַל', 'פִּעֵל', 'פֻּעַל', 'הִפְעִיל', 'הֻפְעַל', 'הִתְפַּעֵל'];
+
+const ALL_Q = [
+  // קל (עבר, הווה, עתיד)
+  { word: 'כָּתַב', correct: 'קַל', hint: 'הוא כתב אתמול' }, { word: 'כָּתְבָה', correct: 'קַל', hint: 'היא כתבה מכתב' },
+  { word: 'כָּתַבְתִּי', correct: 'קַל', hint: 'אני כתבתי' }, { word: 'הָלַךְ', correct: 'קַל', hint: 'הוא הלך' },
+  { word: 'יָשַׁב', correct: 'קַל', hint: 'הוא ישב' }, { word: 'קָרָא', correct: 'קַל', hint: 'הוא קרא ספר' },
+  { word: 'אָכַל', correct: 'קַל', hint: 'הוא אכל' }, { word: 'שָׁמַע', correct: 'קַל', hint: 'הוא שמע קול' },
+  { word: 'כּוֹתֵב', correct: 'קַל', hint: 'הווה' }, { word: 'שׁוֹמֵר', correct: 'קַל', hint: 'הווה' },
+  { word: 'יוֹשֵׁב', correct: 'קַל', hint: 'הווה' }, { word: 'פּוֹגֵשׁ', correct: 'קַל', hint: 'הווה' },
+  { word: 'יִכְתֹּב', correct: 'קַל', hint: 'עתיד' }, { word: 'תִּשְׁמַר', correct: 'קַל', hint: 'עתיד' },
+  { word: 'אֶקְרָא', correct: 'קַל', hint: 'עתיד' }, { word: 'יִסְגֹּר', correct: 'קַל', hint: 'עתיד' },
+  { word: 'לָמַד', correct: 'קַל', hint: 'הוא למד למבחן' }, { word: 'שָׁמַר', correct: 'קַל', hint: 'הוא שמר על הילד' },
+  { word: 'צָחַק', correct: 'קַל', hint: 'הוא צחק מקול רם' }, { word: 'חָשַׁב', correct: 'קַל', hint: 'הוא חשב על רעיון' },
+  { word: 'סָגַר', correct: 'קַל', hint: 'הוא סגר חלון' }, { word: 'יָדַע', correct: 'קַל', hint: 'הוא ידע את התשובה' },
+  { word: 'עָמַד', correct: 'קַל', hint: 'הוא עמד בתור' }, { word: 'רָץ', correct: 'קַל', hint: 'הוא רץ מהר' },
+  
+  // נפעל (עבר, הווה, עתיד)
+  { word: 'נִצַּל', correct: 'נִפְעַל', hint: 'הוא ניצל מסכנה' }, { word: 'נִכְנַס', correct: 'נִפְעַל', hint: 'הוא נכנס לחדר' },
+  { word: 'נִשְׁבַּר', correct: 'נִפְעַל', hint: 'הכוס נשבר' }, { word: 'נֶעֱלַם', correct: 'נִפְעַל', hint: 'הוא נעלם' },
+  { word: 'נִכְנָס', correct: 'נִפְעַל', hint: 'הווה' }, { word: 'נִשְׁמָר', correct: 'נִפְעַל', hint: 'הווה' },
+  { word: 'נִבְדָּק', correct: 'נִפְעַל', hint: 'הווה' }, { word: 'יִכָּנֵס', correct: 'נִפְעַל', hint: 'עתיד' },
+  { word: 'יִשָּׁמֵר', correct: 'נִפְעַל', hint: 'עתיד' }, { word: 'תִּבָּדֵק', correct: 'נִפְעַל', hint: 'עתיד' },
+  { word: 'נִשְׁמַר', correct: 'נִפְעַל', hint: 'הסוד נשמר' }, { word: 'נִפְגַּע', correct: 'נִפְעַל', hint: 'הוא נפגע בתאונה' },
+  { word: 'נִלְמַד', correct: 'נִפְעַל', hint: 'החומר נלמד' }, { word: 'נִסְגַּר', correct: 'נִפְעַל', hint: 'החלון נסגר' },
+  { word: 'נִדְלַק', correct: 'נִפְעַל', hint: 'האור נדלק' }, { word: 'יִזָּהֵר', correct: 'נִפְעַל', hint: 'עתיד' },
+  { word: 'נִשְׁאַל', correct: 'נִפְעַל', hint: 'הוא נשאל בכתה' }, { word: 'נִפְתַּח', correct: 'נִפְעַל', hint: 'השער נפתח' },
+  { word: 'נֶחְשַׁב', correct: 'נִפְעַל', hint: 'הוא נחשב לחכם' }, { word: 'נִזְכַּר', correct: 'נִפְעַל', hint: 'הוא נזכר פתאום' },
+  
+  // פיעל (עבר, הווה, עתיד)
+  { word: 'דִּבֵּר', correct: 'פִּעֵל', hint: 'הוא דיבר בשיעור' }, { word: 'שִׂחֵק', correct: 'פִּעֵל', hint: 'הוא שיחק' },
+  { word: 'בִּשֵּׁל', correct: 'פִּעֵל', hint: 'הוא בישל אוכל' }, { word: 'סִפֵּר', correct: 'פִּעֵל', hint: 'הוא סיפר סיפור' },
+  { word: 'מְדַבֵּר', correct: 'פִּעֵל', hint: 'הווה' }, { word: 'מְסַפֵּר', correct: 'פִּעֵל', hint: 'הווה' },
+  { word: 'מְשַׂחֵק', correct: 'פִּעֵל', hint: 'הווה' }, { word: 'מְחַפֵּשׂ', correct: 'פִּעֵל', hint: 'הווה' },
+  { word: 'יְדַבֵּר', correct: 'פִּעֵל', hint: 'עתיד' }, { word: 'יְסַפֵּר', correct: 'פִּעֵל', hint: 'עתיד' },
+  { word: 'נְשַׂחֵק', correct: 'פִּעֵל', hint: 'עתיד' }, { word: 'יְבַקֵּשׁ', correct: 'פִּעֵל', hint: 'עתיד' },
+  { word: 'לִמֵּד', correct: 'פִּעֵל', hint: 'המורה לימד' }, { word: 'כִּבֵּס', correct: 'פִּעֵל', hint: 'הוא כיבס את הבגד' },
+  { word: 'צִיֵּר', correct: 'פִּעֵל', hint: 'הוא צייר ציור' }, { word: 'חִבֵּר', correct: 'פִּעֵל', hint: 'הוא חיבר משפט' },
+  { word: 'קִבֵּל', correct: 'פִּעֵל', hint: 'הוא קיבל מתנה' }, { word: 'שִׁלֵּם', correct: 'פִּעֵל', hint: 'הוא שילם בחנות' },
+  { word: 'בִּקֵּר', correct: 'פִּעֵל', hint: 'הוא ביקר חבר' }, { word: 'טִיֵּל', correct: 'פִּעֵל', hint: 'הוא טייל בפארק' },
+  
+  // פועל (עבר, הווה, עתיד)
+  { word: 'בֻּשַּׁל', correct: 'פֻּעַל', hint: 'האוכל בושל' }, { word: 'סֻפַּר', correct: 'פֻּעַל', hint: 'הסיפור סופר' },
+  { word: 'צֻיַּר', correct: 'פֻּעַל', hint: 'התמונה צוירה' }, { word: 'סֻדַּר', correct: 'פֻּעַל', hint: 'החדר סודר' },
+  { word: 'מְבֻשָּׁל', correct: 'פֻּעַל', hint: 'הווה' }, { word: 'מְסֻפָּר', correct: 'פֻּעַל', hint: 'הווה' },
+  { word: 'מְבֻקָּשׁ', correct: 'פֻּעַל', hint: 'הווה' }, { word: 'יְבֻשַּׁל', correct: 'פֻּעַל', hint: 'עתיד' },
+  { word: 'יְסֻפַּר', correct: 'פֻּעַל', hint: 'עתיד' }, { word: 'יְבֻקַּשׁ', correct: 'פֻּעַל', hint: 'עתיד' },
+  { word: 'יְטֻפַּל', correct: 'פֻּעַל', hint: 'עתיד' },
+  { word: 'פֻּטַּר', correct: 'פֻּעַל', hint: 'הוא פוטר מעבודתו' }, { word: 'כֻּבַּס', correct: 'פֻּעַל', hint: 'הבגד כובס' },
+  { word: 'חֻפַּשׂ', correct: 'פֻּעַל', hint: 'הכלב חופש' }, { word: 'חֻבַּר', correct: 'פֻּעַל', hint: 'הכבל חובר' },
+  { word: 'טֻפַּל', correct: 'פֻּעַל', hint: 'הוא טופל במסירות' }, { word: 'חֻלַּק', correct: 'פֻּעַל', hint: 'האוכל חולק' },
+  { word: 'שֻׁלַּם', correct: 'פֻּעַל', hint: 'החשבון שולם' }, { word: 'כֻּבַּד', correct: 'פֻּעַל', hint: 'הוא כובד על ידי כולם' },
+  
+  // הפעיל (עבר, הווה, עתיד)
+  { word: 'הִכְנִיס', correct: 'הִפְעִיל', hint: 'הוא הכניס לתיק' }, { word: 'הוֹצִיא', correct: 'הִפְעִיל', hint: 'הוא הוציא מהכיס' },
+  { word: 'הִסְבִּיר', correct: 'הִפְעִיל', hint: 'הוא הסביר לחבר' }, { word: 'הִזְמִין', correct: 'הִפְעִיל', hint: 'הוא הזמין חברים' },
+  { word: 'מַכְנִיס', correct: 'הִפְעִיל', hint: 'הווה' }, { word: 'מַסְבִּיר', correct: 'הִפְעִיל', hint: 'הווה' },
+  { word: 'מַרְגִּישָׁה', correct: 'הִפְעִיל', hint: 'הווה' }, { word: 'מַדְלִיק', correct: 'הִפְעִיל', hint: 'הווה' },
+  { word: 'יַכְנִיס', correct: 'הִפְעִיל', hint: 'עתיד' }, { word: 'אַסְבִּיר', correct: 'הִפְעִיל', hint: 'עתיד' },
+  { word: 'יַרְגִּישׁוּ', correct: 'הִפְעִיל', hint: 'עתיד' }, { word: 'יַקְשִׁיב', correct: 'הִפְעִיל', hint: 'עתיד' },
+  { word: 'הִרְגִּישׁ', correct: 'הִפְעִיל', hint: 'הוא הרגיש טוב' }, { word: 'הִזְכִּיר', correct: 'הִפְעִיל', hint: 'הוא הזכיר לי' },
+  { word: 'הִלְבִּישׁ', correct: 'הִפְעִיל', hint: 'הוא הלביש את הילד' }, { word: 'הִדְפִּיס', correct: 'הִפְעִיל', hint: 'הוא הדפיס דף' },
+  { word: 'הִפְסִיק', correct: 'הִפְעִיל', hint: 'הוא הפסיק את הרעש' }, { word: 'הִמְשִׁיךְ', correct: 'הִפְעִיל', hint: 'הוא המשיך ללכת' },
+  
+  // הופעל (עבר, הווה, עתיד)
+  { word: 'הֻכְנַס', correct: 'הֻפְעַל', hint: 'החפץ הוכנס' }, { word: 'הֻסְבַּר', correct: 'הֻפְעַל', hint: 'הנושא הוסבר' },
+  { word: 'הֻזְמַן', correct: 'הֻפְעַל', hint: 'האורח הוזמן' }, { word: 'הֻכְתַּב', correct: 'הֻפְעַל', hint: 'המכתב הוכתב' },
+  { word: 'מֻכְנָס', correct: 'הֻפְעַל', hint: 'הווה' }, { word: 'מֻסְבָּר', correct: 'הֻפְעַל', hint: 'הווה' },
+  { word: 'מֻזְמָן', correct: 'הֻפְעַל', hint: 'הווה' }, { word: 'מֻדְלָק', correct: 'הֻפְעַל', hint: 'הווה' },
+  { word: 'יֻכְנַס', correct: 'הֻפְעַל', hint: 'עתיד' }, { word: 'יֻסְבַּר', correct: 'הֻפְעַל', hint: 'עתיד' },
+  { word: 'יֻזְמְנוּ', correct: 'הֻפְעַל', hint: 'עתיד' }, { word: 'יוּחְלַט', correct: 'הֻפְעַל', hint: 'עתיד' },
+  { word: 'הֻרְגַּשׁ', correct: 'הֻפְעַל', hint: 'השינוי הורגש' }, { word: 'הֻזְכַּר', correct: 'הֻפְעַל', hint: 'השם הוזכר' },
+  { word: 'הֻלְבַּשׁ', correct: 'הֻפְעַל', hint: 'הילד הולבש' }, { word: 'הֻדְפַּס', correct: 'הֻפְעַל', hint: 'המסמך הודפס' },
+  { word: 'הֻפְסַק', correct: 'הֻפְעַל', hint: 'המשחק הופסק' }, { word: 'הֻפְעַל', correct: 'הֻפְעַל', hint: 'המכשיר הופעל' },
+  
+  // התפעל (עבר, הווה, עתיד)
+  { word: 'הִתְלַבֵּשׁ', correct: 'הִתְפַּעֵל', hint: 'הוא התלבש בבוקר' }, { word: 'הִתְרַחֵץ', correct: 'הִתְפַּעֵל', hint: 'הוא התרחץ במקלחת' },
+  { word: 'הִתְרַגֵּשׁ', correct: 'הִתְפַּעֵל', hint: 'הוא התרגש מהמתנה' }, { word: 'הִתְכּוֹנֵן', correct: 'הִתְפַּעֵל', hint: 'הוא התכונן למחר' },
+  { word: 'מִתְלַבֵּשׁ', correct: 'הִתְפַּעֵל', hint: 'הווה' }, { word: 'מִתְרַגֶּשֶׁת', correct: 'הִתְפַּעֵל', hint: 'הווה' },
+  { word: 'מִשְׁתַּמֵּשׁ', correct: 'הִתְפַּעֵל', hint: 'הווה' },
+  { word: 'יִתְקַדֵּם', correct: 'הִתְפַּעֵל', hint: 'עתיד' }, { word: 'אֶתְלַבֵּשׁ', correct: 'הִתְפַּעֵל', hint: 'עתיד' },
+  { word: 'יִתְרַגְּשׁוּ', correct: 'הִתְפַּעֵל', hint: 'עתיד' },
+  { word: 'הִשְׁתַּתֵּף', correct: 'הִתְפַּעֵל', hint: 'הוא השתתף במשחק' }, { word: 'הִצְטַעֵר', correct: 'הִתְפַּעֵל', hint: 'הוא הצטער על הטעות' },
+  { word: 'הִסְתַּכֵּל', correct: 'הִתְפַּעֵל', hint: 'הוא הסתכל בנוף' }, { word: 'הִשְׁתַּפֵּר', correct: 'הִתְפַּעֵל', hint: 'הוא השתפר בלימודים' },
+  { word: 'הִתְפַּלֵּל', correct: 'הִתְפַּעֵל', hint: 'הוא התפלל בכוונה' }, { word: 'הִתְנַהֵג', correct: 'הִתְפַּעֵל', hint: 'הוא התנהג יפה' }
+];
+
+const PREBUILT = [
+  { id: 'binyans_all', icon: '📝', label: 'כל הבניינים', rows: ALL_Q },
+  { id: 'synonyms', icon: '🔤', label: 'מילים נרדפות (ה\')', rows: [
+    { word: 'עָצוּם', correct: 'כַּבִּיר' }, { word: 'אֲפֵלָה', correct: 'עֲלָטָה' }, { word: 'שָׁאוֹן', correct: 'רַעַשׁ' }, 
+    { word: 'יָהִיר', correct: 'שַׁחְצָן' }, { word: 'עָנִי', correct: 'אֶבְיוֹן' }, { word: 'עָשִׁיר', correct: 'אָמִיד' }, 
+    { word: 'מַהֲמוֹרָה', correct: 'מִכְשׁוֹל' }, { word: 'אֶשְׁנָב', correct: 'חַלּוֹן' }, { word: 'יָגוֹן', correct: 'צַעַר' }, 
+    { word: 'חֶדְוָה', correct: 'שִׂמְחָה' }, { word: 'זַעַף', correct: 'כַּעַס' }, { word: 'עֲנָוָה', correct: 'צְנִיעוּת' },
+    { word: 'תּוּגָה', correct: 'עַצְבוּת' }, { word: 'מָדוֹן', correct: 'מְרִיבָה' }, { word: 'קֹדֶר', correct: 'אָפֵל' },
+    { word: 'זָרִיז', correct: 'מָהִיר' }, { word: 'אַמִּיץ', correct: 'נוֹעָז' }, { word: 'מָזוֹן', correct: 'צֵידָה' },
+    { word: 'רַב', correct: 'הָמוֹן' }, { word: 'יְפֵהפֶּה', correct: 'מַקְסִים' }, { word: 'טוֹעֶה', correct: 'שׁוֹגֶה' },
+    { word: 'יָרֵא', correct: 'מְפַחֵד' }, { word: 'קָשִׁישׁ', correct: 'זָקֵן' }, { word: 'סָמוּי', correct: 'נִסְתָּר' },
+    { word: 'נָבוֹן', correct: 'חָכָם' }, { word: 'נָס', correct: 'בָּרַח' }, { word: 'צוֹפֶה', correct: 'מַבִּיט' },
+    { word: 'תֵּבֵל', correct: 'עוֹלָם' }, { word: 'פֶּלֶא', correct: 'נֵס' }, { word: 'פָּצוּעַ', correct: 'חָבוּל' },
+    { word: 'חָלָל', correct: 'רֵיק' }, { word: 'רָטֹב', correct: 'לַח' }, { word: 'צָהֲלָה', correct: 'שִׂמְחָה' },
+    { word: 'יָשִׁישׁ', correct: 'זָקֵן' }, { word: 'אִילָן', correct: 'עֵץ' }, { word: 'דֶּרֶך', correct: 'נָתִיב' },
+    { word: 'אֵימָה', correct: 'פַּחַד' }, { word: 'מַעֲנֶה', correct: 'תְּשׁוּבָה' }, { word: 'חַמָּה', correct: 'שֶׁמֶשׁ' },
+    { word: 'לְבָנָה', correct: 'יָרֵחַ' }, { word: 'גְּמָר', correct: 'סִיּוּם' }, { word: 'צַר', correct: 'אוֹיֵב' },
+    { word: 'רֵעַ', correct: 'חָבֵר' }, { word: 'עָב', correct: 'עָנָן' }, { word: 'מָטָר', correct: 'גֶּשֶׁם' },
+    { word: 'דַּל', correct: 'עָנִי' }, { word: 'אִגֶּרֶת', correct: 'מִכְתָּב' }, { word: 'שְׁגִיאָה', correct: 'טָעוּת' },
+    { word: 'חֶסֶד', correct: 'טוֹבָה' }, { word: 'עָמָל', correct: 'עֲבוֹדָה' }
+  ]},
+  { id: 'opposites', icon: '↔️', label: 'הפכים (ה\')', rows: [
+    { word: 'יָהִיר', correct: 'עָנָיו' }, { word: 'אַמִּיץ', correct: 'פַּחְדָן' }, { word: 'זְמַנִּי', correct: 'קָבוּעַ' }, 
+    { word: 'מוּפְשָׁט', correct: 'מוּחָשִׁי' }, { word: 'עַצְלָן', correct: 'חָרוּץ' }, { word: 'קַמְצָן', correct: 'נָדִיב' }, 
+    { word: 'אוֹפְּטִימִי', correct: 'פֶּסִימִי' }, { word: 'יִתְרוֹן', correct: 'חִסָּרוֹן' }, { word: 'תְּבוּסָה', correct: 'נִיצָּחוֹן' }, 
+    { word: 'שׁוֹפֵעַ', correct: 'דַּל' }, { word: 'מֻרְכָּב', correct: 'פָּשׁוּט' }, { word: 'תִּקְוָה', correct: 'יֵאוּשׁ' },
+    { word: 'טָפֵל', correct: 'עִיקָּר' }, { word: 'סָמוּי', correct: 'גָּלוּי' }, { word: 'לְפַזֵּר', correct: 'לֶאֱסוֹף' },
+    { word: 'לְהַתִּיר', correct: 'לֶאֱסוֹר' }, { word: 'מְאֻרְגָּן', correct: 'מְפֻזָּר' }, { word: 'שֶׁקֶר', correct: 'אֱמֶת' },
+    { word: 'שָׁלֵם', correct: 'חָסֵר' }, { word: 'עָקוּם', correct: 'יָשָׁר' }, { word: 'גָּס', correct: 'עָדִין' },
+    { word: 'רָחָב', correct: 'צַר' }, { word: 'בָּרִיא', correct: 'חוֹלֶה' }, { word: 'שָׁמֵן', correct: 'רָזֶה' },
+    { word: 'טָהוֹר', correct: 'טָמֵא' }, { word: 'רַכּוּת', correct: 'קַשְׁיוּת' }, { word: 'רָטֹב', correct: 'יָבֵשׁ' },
+    { word: 'סוֹף', correct: 'הַתְחָלָה' }, { word: 'מְאֻחָר', correct: 'מוּקְדָּם' }, { word: 'נָדִיר', correct: 'נָפוֹץ' },
+    { word: 'צָפוּף', correct: 'מְרֻוָּח' }, { word: 'שָׁקֵט', correct: 'רוֹעֵשׁ' }, { word: 'אָרוֹךְ', correct: 'קָצָר' },
+    { word: 'מַר', correct: 'מָתוֹק' }, { word: 'כִּשָּׁלוֹן', correct: 'הַצְלָחָה' }, { word: 'זַכַּאי', correct: 'אָשֵׁם' },
+    { word: 'מְרַתֵּק', correct: 'מְשַׁעֲמֵם' }, { word: 'פַּזְרָן', correct: 'קַמְצָן' }, { word: 'זוֹל', correct: 'יָקָר' },
+    { word: 'רוֹגֵעַ', correct: 'סוֹעֵר' }, { word: 'אוֹר', correct: 'חֹשֶׁךְ' }, { word: 'חָזָק', correct: 'חַלָּשׁ' },
+    { word: 'רָחוֹק', correct: 'קָרוֹב' }, { word: 'עָלָה', correct: 'יָרַד' }, { word: 'רֵיק', correct: 'מָלֵא' }
+  ]},
+  { id: 'categories', icon: '🗂', label: 'קטגוריות', rows: [
+    { word: 'תַּפּוּחַ', correct: 'פְּרִי' }, { word: 'כֶּלֶב', correct: 'חַיָּה' }, { word: 'אָדֹם', correct: 'צֶבַע' }, { word: 'כִּסֵּא', correct: 'רְהִיט' },
+    { word: 'גֶּזֶר', correct: 'יֶרֶק' }, { word: 'חָלָב', correct: 'מַשְׁקֶה' }, { word: 'שִׁיר', correct: 'מוּסִיקָה' }, { word: 'רֶכֶב', correct: 'תַּחְבּוּרָה' },
+    { word: 'פַּטִּישׁ', correct: 'כְּלִי עֲבוֹדָה' }, { word: 'חֻלְצָה', correct: 'בֶּגֶד' }, { word: 'חָלִיל', correct: 'כְּלִי נְגִינָה' },
+    { word: 'אֹרֶן', correct: 'עֵץ' }, { word: 'מִסְפָּרַיִם', correct: 'מַכְשִׁיר' }, { word: 'תֵּל אָבִיב', correct: 'עִיר' },
+    { word: 'שׁוֹשַׁנָּה', correct: 'פֶּרַח' }, { word: 'סִיר', correct: 'כְּלִי מִטְבָּח' }, { word: 'מְקָרֵר', correct: 'מַכְשִׁיר חַשְׁמַלִּי' },
+    { word: 'חַרְדָּל', correct: 'תַּבְלִין' }, { word: 'זָהָב', correct: 'מַתֶּכֶת' }, { word: 'כַּדּוּרֶגֶל', correct: 'סְפּוֹרְט' },
+    { word: 'זְבוּב', correct: 'חֶרֶק' }, { word: 'סִינִית', correct: 'שָׂפָה' }, { word: 'דָּג', correct: 'בַּעַל חַיִּים' },
+    { word: 'אֶקָלִיפְּטוּס', correct: 'עֵץ' }, { word: 'יִשְׂרָאֵל', correct: 'מְדִינָה' }, { word: 'מִכְנָסַיִם', correct: 'בֶּגֶד' },
+    { word: 'שֻׁלְחָן', correct: 'רְהִיט' }, { word: 'שְׁזִיף', correct: 'פְּרִי' }, { word: 'אֲבַטִּיחַ', correct: 'פְּרִי' },
+    { word: 'עַגְבָנִיָּה', correct: 'יֶרֶק' }, { word: 'סוּס', correct: 'חַיָּה' }, { word: 'סְפִינָה', correct: 'תַּחְבּוּרָה' },
+    { word: 'כֶּסֶף', correct: 'מַטְבֵּעַ' }, { word: 'כִּנּוֹר', correct: 'כְּלִי נְגִינָה' }, { word: 'מַזְלֵג', correct: 'סַכּוּ"ם' },
+    { word: 'כָּחוֹל', correct: 'צֶבַע' }, { word: 'חֹרֶף', correct: 'עוֹנָה' }, { word: 'קַיִץ', correct: 'עוֹנָה' },
+    { word: 'מַאְדִּים', correct: 'כּוֹכָב לֶכֶת' }, { word: 'מִצְרַיִם', correct: 'מְדִינָה' }
+  ]},
+  { id: 'math', icon: '✖️', label: 'לוח הכפל', rows: [
+    { word: '6×6', correct: '36' }, { word: '6×7', correct: '42' }, { word: '6×8', correct: '48' }, { word: '6×9', correct: '54' },
+    { word: '7×7', correct: '49' }, { word: '7×8', correct: '56' }, { word: '7×9', correct: '63' }, { word: '8×8', correct: '64' }, 
+    { word: '8×9', correct: '72' }, { word: '9×9', correct: '81' }, { word: '5×8', correct: '40' }, { word: '4×7', correct: '28' },
+    { word: '3×9', correct: '27' }, { word: '4×8', correct: '32' }, { word: '6×5', correct: '30' }, { word: '7×5', correct: '35' },
+    { word: '3×8', correct: '24' }, { word: '7×4', correct: '28' }, { word: '9×6', correct: '54' }, { word: '8×7', correct: '56' },
+    { word: '3×3', correct: '9' }, { word: '4×4', correct: '16' }, { word: '5×5', correct: '25' }, { word: '2×7', correct: '14' },
+    { word: '2×8', correct: '16' }, { word: '2×9', correct: '18' }, { word: '3×4', correct: '12' }, { word: '3×5', correct: '15' },
+    { word: '3×6', correct: '18' }, { word: '3×7', correct: '21' }, { word: '4×5', correct: '20' }, { word: '4×6', correct: '24' },
+    { word: '4×9', correct: '36' }, { word: '5×6', correct: '30' }, { word: '5×7', correct: '35' }, { word: '5×9', correct: '45' },
+    { word: '8×6', correct: '48' }, { word: '9×7', correct: '63' }, { word: '9×8', correct: '72' }, { word: '8×5', correct: '40' },
+    { word: '2×6', correct: '12' }, { word: '6×2', correct: '12' }, { word: '4×3', correct: '12' }, { word: '7×2', correct: '14' },
+    { word: '8×2', correct: '16' }, { word: '9×2', correct: '18' }, { word: '5×4', correct: '20' }, { word: '6×4', correct: '24' },
+    { word: '7×3', correct: '21' }, { word: '8×3', correct: '24' }, { word: '9×3', correct: '27' }, { word: '9×4', correct: '36' },
+    { word: '7×6', correct: '42' }, { word: '8×6', correct: '48' }, { word: '9×5', correct: '45' }
+  ]}
+];
+
+// ── CONFIG & ASSETS ──
+const MW = 92, MNOSE = 22, MBODY = 52, MFIN = 12, MFLAME = 28, MTOTAL = MNOSE + MBODY + MFIN + MFLAME;
+const PW = 170, PH = 92;
+const C = { pu: '#a855f7', puD: '#7c3aed', pk: '#ec4899', gr: '#39ff14', grD: '#16a34a' };
+
+const PALETTE = [
+  { b: '#3b82f6', d: '#1d4ed8', f: '#60a5fa', g: '#93c5fd' },
+  { b: '#a855f7', d: '#7c3aed', f: '#c084fc', g: '#e879f9' },
+  { b: '#f43f5e', d: '#be123c', f: '#fb7185', g: '#fda4af' },
+  { b: '#f59e0b', d: '#b45309', f: '#fbbf24', g: '#fde68a' },
+  { b: '#22c55e', d: '#15803d', f: '#4ade80', g: '#86efac' },
+  { b: '#06b6d4', d: '#0e7490', f: '#22d3ee', g: '#67e8f9' },
+  { b: '#ef4444', d: '#b91c1c', f: '#f87171', g: '#fca5a5' },
+  { b: '#10b981', d: '#047857', f: '#34d399', g: '#6ee7b7' }
+];
+
+const hashStr = str => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return Math.abs(hash);
+};
+
+const mCol = w => {
+  const predefined = {
+    'קַל': PALETTE[0], 'נִפְעַל': PALETTE[1], 'פִּעֵל': PALETTE[2], 'פֻּעַל': PALETTE[3],
+    'הִפְעִיל': PALETTE[4], 'הֻפְעַל': PALETTE[5], 'הִתְפַּעֵל': PALETTE[6]
+  };
+  return predefined[w] || PALETTE[hashStr(w.toString()) % PALETTE.length];
+};
+
+const getWrong = (c, uniqueAns) => {
+  let o = [...uniqueAns].filter(b => b !== c).sort(() => Math.random() - .5);
+  if (o.length < 3) { 
+    const genericPad = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', '1', '2', '3'];
+    const pad = genericPad.filter(b => b !== c && !o.includes(b)).sort(() => Math.random() - .5);
+    o = [...o, ...pad]; 
+  }
+  return o.slice(0, 3);
+};
+
+const PLANE_SVG = (
+  <svg width={PW} height={PH} viewBox="0 0 170 92" style={{ display: 'block', overflow: 'visible' }}>
+    <defs>
+      <radialGradient id="pg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#29b6f6" stopOpacity=".5"/><stop offset="100%" stopColor="#29b6f6" stopOpacity="0"/></radialGradient>
+      {/* הגדרת חיתוך בדיוק לצורה של זנב המטוס */}
+      <clipPath id="tailClip">
+        <path d="M70,33 L120,36 L120,60 L70,66 Z" />
+      </clipPath>
+    </defs>
+    <ellipse cx="82" cy="46" rx="78" ry="32" fill="url(#pg)" opacity=".7"/>
+    <polygon points="28,52 112,52 88,82" fill="#546e7a" stroke="#37474f" strokeWidth="1.5"/>
+    <polygon points="34,42 106,42 100,14" fill="#546e7a" stroke="#37474f" strokeWidth="1.5"/>
+    <polygon points="130,36 165,16 165,60" fill="#607d8b" stroke="#455a64" strokeWidth="1.5"/>
+    <path d="M56,29 L132,37 C150,38 162,44 162,48 C162,52 150,58 132,59 L56,67 Z" fill="#eceff1" stroke="#90a4ae" strokeWidth="2" />
+    
+    {/* רקע לבן לדגל */}
+    <path d="M70,33 L120,36 L120,60 L70,66 Z" fill="white" stroke="#ccc" strokeWidth="0.5" opacity="0.9" />
+    
+    {/* ציור הדגל חתוך לתוך הזנב עם מגן דוד אחד בלבד */}
+    <g clipPath="url(#tailClip)" opacity="0.9">
+      <g transform="translate(95, 48) rotate(-8)">
+        <rect x="-25" y="-9" width="50" height="2.5" fill="#0038b8" />
+        <rect x="-25" y="6.5" width="50" height="2.5" fill="#0038b8" />
+        <path d="M0,-4.5 L4.5,2 L-4.5,2 Z" fill="none" stroke="#0038b8" strokeWidth="1.2" />
+        <path d="M0,4.5 L-4.5,-2 L4.5,-2 Z" fill="none" stroke="#0038b8" strokeWidth="1.2" />
+      </g>
+    </g>
+
+    <path d="M6,48 C10,30 40,28 56,29 L56,67 C40,68 10,66 6,48Z" fill="#eceff1" stroke="#90a4ae" strokeWidth="2" />
+    <ellipse cx="52" cy="37" rx="22" ry="17" fill="#b3e5fc" stroke="#29b6f6" strokeWidth="2.5" opacity=".92"/>
+    <circle cx="52" cy="38" r="13" fill="#ffe0b2"/>
+    <path d="M39,38 A13,15 0 0,1 65,38" fill="#1a237e" stroke="#0d1b6e" strokeWidth="1"/>
+    <circle cx="46" cy="40" r="2.5" fill="#1a237e"/><circle cx="58" cy="40" r="2.5" fill="#1a237e"/>
+    <ellipse cx="6" cy="48" rx="8" ry="12" fill="#cfd8dc" stroke="#b0bec5" strokeWidth="2"/>
+    <rect x="74" y="64" width="11" height="28" rx="5.5" fill="#546e7a" stroke="#37474f" strokeWidth="1.5"/>
+    <rect x="76" y="87" width="7" height="7" rx="3.5" fill="#263238"/>
+  </svg>
+);
+
+const Cloud = ({ w = 160, op = .92 }) => (
+  <svg width={w} height={Math.round(w*.56)} viewBox="0 0 160 90" style={{ display: 'block' }}>
+    <ellipse cx="80" cy="74" rx="74" ry="22" fill={`rgba(255,255,255,${op})`}/>
+    <ellipse cx="55" cy="56" rx="42" ry="30" fill={`rgba(255,255,255,${op})`}/>
+    <ellipse cx="105" cy="59" rx="38" ry="28" fill={`rgba(255,255,255,${op})`}/>
+    <ellipse cx="80" cy="44" rx="36" ry="29" fill={`rgba(255,255,255,${op})`}/>
+    <ellipse cx="60" cy="35" rx="27" ry="22" fill={`rgba(255,255,255,${op*.95})`}/>
+    <ellipse cx="102" cy="39" rx="31" ry="25" fill={`rgba(255,255,255,${op*.95})`}/>
+    <ellipse cx="80" cy="28" rx="20" ry="18" fill={`rgba(255,255,255,${op*.88})`}/>
+  </svg>
+);
+
+const Missile = ({ word, disabled, sc }) => {
+  const s = sc || mCol(word);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: MW }}>
+      <div style={{ width: 0, height: 0, borderLeft: `${MW / 2}px solid transparent`, borderRight: `${MW / 2}px solid transparent`, borderBottom: `${MNOSE}px solid ${disabled ? '#2a2a2a' : s.f}` }} />
+      <div style={{ width: MW, height: MBODY, background: disabled ? '#141414' : `linear-gradient(160deg,${s.f} 0%,${s.b} 40%,${s.d} 75%)`, borderBottom: `2px solid ${disabled ? '#333' : s.g}99`, borderLeft: `2px solid ${disabled ? '#333' : s.g}99`, borderRight: `2px solid ${disabled ? '#333' : s.g}99`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        <span style={{ color: disabled ? '#444' : 'white', fontWeight: 900, fontSize: 17, direction: 'rtl', textAlign: 'center', lineHeight: 1.5, padding: '0 3px', letterSpacing: 1, position: 'relative', zIndex: 1 }}>{word}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', width: MW + 28 }}>
+        <div style={{ width: 0, height: 0, borderTop: `${MFIN}px solid ${disabled ? '#1e1e1e' : s.d}`, borderRight: '15px solid transparent' }} />
+        <div style={{ flex: 1, height: MFIN, background: disabled ? '#111' : `linear-gradient(180deg,${s.b},${s.d})`, borderRadius: '0 0 4px 4px' }} />
+        <div style={{ width: 0, height: 0, borderTop: `${MFIN}px solid ${disabled ? '#1e1e1e' : s.d}`, borderLeft: '15px solid transparent' }} />
+      </div>
+      {!disabled ? (
+        <div style={{ width: MW, height: MFLAME, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+          <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 48, height: 30, background: 'linear-gradient(0deg,transparent,#ff3300 8%,#ff7700 32%,#ffaa00 58%,transparent)', animation: 'fl1 .11s ease-in-out infinite alternate' }} />
+        </div>
+      ) : <div style={{ height: MFLAME }} />}
+    </div>
+  );
+};
+
+const Credit = ({ style }) => (
+  <div style={{ textAlign: 'center', color: '#ff33cc', fontSize: '18px', direction: 'rtl', fontWeight: 900, padding: '10px', pointerEvents: 'none', ...style }}>
+    יצרה מורן קמיל גלברג, הוראה מותאמת, באמצעות בינה מלאכותית
+  </div>
+);
+
+const ConfettiPiece = ({ left, duration, delay, color, width, height, rot }) => (
+  <div style={{
+    position: 'absolute', left, top: '-10%', width, height, backgroundColor: color,
+    transform: `rotate(${rot}deg)`, animation: `confettiFall ${duration} linear ${delay} forwards`
+  }} />
+);
+
+const Confetti = () => {
+  const pieces = Array.from({ length: 80 }).map((_, i) => ({
+    id: i, left: `${Math.random() * 100}%`, animDuration: `${Math.random() * 3 + 2}s`,
+    animDelay: `${Math.random() * 1.5}s`, color: ['#fce18a', '#ff726d', '#b48def', '#f4306d', '#39ff14'][Math.floor(Math.random() * 5)],
+    width: `${Math.random() * 10 + 6}px`, height: `${Math.random() * 15 + 8}px`, rot: Math.random() * 360,
+  }));
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 9999 }}>
+      {pieces.map(p => <ConfettiPiece key={p.id} {...p} duration={p.animDuration} delay={p.animDelay} />)}
+    </div>
+  );
+};
+
+function EditorTable({ rows, updateRow, setRows, customValid, startGame, customName }) {
+  return (
+    <div style={{ width: '100%' }}>
+      <div style={{ overflowX: 'auto', marginBottom: 8 }}>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px', direction: 'rtl' }}>
+          <thead>
+            <tr>
+              <th style={{ color: '#aaa', fontSize: 12, textAlign: 'right', padding: '0 5px' }}>מילה / שאלה</th>
+              <th style={{ color: '#aaa', fontSize: 12, textAlign: 'right', padding: '0 5px' }}>תשובה / קטגוריה</th>
+              <th style={{ width: '40px' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id}>
+                <td><input className="ti" style={{fontFamily: 'inherit'}} value={row.word} onChange={e => updateRow(row.id, 'word', e.target.value)} /></td>
+                <td><input className="ti" style={{fontFamily: 'inherit'}} value={row.correct} onChange={e => updateRow(row.id, 'correct', e.target.value)} /></td>
+                <td><button onClick={() => setRows(r => r.filter(x => x.id !== row.id))} style={{ color: '#f44', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button onClick={() => setRows(r => [...r, { id: Math.random(), word: '', correct: '', hint: '' }])} style={{ background: '#222', color: C.pu, border: '1px dashed #444', width: '100%', padding: '10px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit' }}>+ הוסף שורה</button>
+      <button disabled={!customValid} onClick={() => {
+        const qs = rows.filter(r => r.word && r.correct);
+        startGame({ rows: qs, label: customName || 'נושא אישי' });
+      }} style={{ width: '100%', background: customValid ? C.gr : '#333', color: 'black', padding: '15px', borderRadius: 12, fontSize: 18, fontWeight: 900, border: 'none', marginTop: 15, cursor: customValid ? 'pointer' : 'default', opacity: customValid ? 1 : 0.5, fontFamily: 'inherit' }}>{customValid ? 'שחק עכשיו!' : 'מלא לפחות 4 שורות'}</button>
+    </div>
+  );
+}
+
+export default function App() {
+  const [screen, setScreen] = useState('welcome');
+  const [soundOn, setSoundOn] = useState(true);
+  const [gameSpeed, setGameSpeed] = useState('medium');
+  const [gameDuration, setGameDuration] = useState(90);
+  const [customRows, setCustomRows] = useState(() => Array.from({ length: 6 }, () => ({ id: Math.random(), word: '', correct: '', hint: '' })));
+  const [customName, setCustomName] = useState('');
+  const [tick, setTick] = useState(0);
+
+  const sndRef = useRef(true);
+  const audRef = useRef(null);
+  const G = useRef(null);
+  const loopRef = useRef(null);
+  const skyRef = useRef(null);
+  const dragActive = useRef(false);
+  const lastTapRef = useRef(0);
+  const keysRef = useRef({ space: false, up: false, down: false, left: false, right: false });
+
+  useEffect(() => { sndRef.current = soundOn; }, [soundOn]);
+
+  useEffect(() => {
+    const handleKey = (e, isDown) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+        keysRef.current.space = isDown;
+        if (isDown && e.preventDefault) e.preventDefault();
+      }
+      if (e.key === 'ArrowUp' || e.code === 'ArrowUp') { keysRef.current.up = isDown; if (isDown && e.preventDefault) e.preventDefault(); }
+      if (e.key === 'ArrowDown' || e.code === 'ArrowDown') { keysRef.current.down = isDown; if (isDown && e.preventDefault) e.preventDefault(); }
+      if (e.key === 'ArrowLeft' || e.code === 'ArrowLeft') { keysRef.current.left = isDown; if (isDown && e.preventDefault) e.preventDefault(); }
+      if (e.key === 'ArrowRight' || e.code === 'ArrowRight') { keysRef.current.right = isDown; if (isDown && e.preventDefault) e.preventDefault(); }
+    };
+    const down = e => handleKey(e, true);
+    const up = e => handleKey(e, false);
+    window.addEventListener('keydown', down, { capture: true, passive: false });
+    window.addEventListener('keyup', up, { capture: true, passive: false });
+    return () => {
+      window.removeEventListener('keydown', down, { capture: true });
+      window.removeEventListener('keyup', up, { capture: true });
+    };
+  }, []);
+
+  const sfx = (type) => {
+    if (!sndRef.current) return;
+    try {
+      if (!audRef.current) audRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = audRef.current;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      if (type === 'hit') { o.frequency.setValueAtTime(523, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(1047, ctx.currentTime + 0.1); g.gain.setValueAtTime(0.1, ctx.currentTime); }
+      else if (type === 'wrong') { o.frequency.setValueAtTime(280, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.3); g.gain.setValueAtTime(0.1, ctx.currentTime); }
+      else { o.frequency.setValueAtTime(1400, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1); g.gain.setValueAtTime(0.1, ctx.currentTime); }
+      o.start(); o.stop(ctx.currentTime + 0.3);
+    } catch (e) {}
+  };
+
+  const startGame = (topic) => {
+    const cw = window.innerWidth, ch = window.innerHeight;
+    const speedMultiplier = gameSpeed === 'low' ? 0.35 : (gameSpeed === 'medium' ? 0.6 : 1.5);
+    G.current = {
+      score: 0, time: gameDuration, lives: 5, planeX: cw / 2 - PW / 2, planeY: 220,
+      cw, ch, bullets: [], bubbles: [], topic, speedMult: speedMultiplier,
+      currentQ: null, over: false, started: true, trans: false,
+      flash: null, flashAge: 0, scoreFloat: null, scoreFloatAge: 0, canShoot: true, shootTimer: 0
+    };
+    setScreen('game');
+    setTimeout(() => {
+      spawn();
+      if (skyRef.current) skyRef.current.focus();
+      if (loopRef.current) clearInterval(loopRef.current);
+      loopRef.current = setInterval(gameLoop, 30);
+    }, 100);
+  };
+
+  const spawn = () => {
+    const gc = G.current; if (!gc) return;
+    const q = gc.topic.rows[Math.floor(Math.random() * gc.topic.rows.length)];
+    const uniqueAns = [...new Set(gc.topic.rows.map(p => p.correct))];
+    const opts = [q.correct, ...getWrong(q.correct, uniqueAns)].sort(() => Math.random() - .5);
+    gc.currentQ = q; gc.canHit = true;
+    gc.bubbles = opts.map((word, i) => ({
+      id: Math.random(), x: Math.min(Math.max((gc.cw / opts.length) * i + (gc.cw / opts.length / 2) - MW / 2, 0), gc.cw - MW),
+      y: gc.ch + 100 + Math.random() * 50, word, correct: word === q.correct, speed: (2.5 + Math.random()) * gc.speedMult, disabled: false
+    }));
+    setTick(t => t + 1);
+  };
+
+  const forceShoot = () => {
+    const gc = G.current;
+    if (gc && gc.canShoot && !gc.over) {
+      gc.bullets.push({ id: Math.random(), x: gc.planeX + PW / 2, y: gc.planeY + PH - 10 });
+      sfx('shoot'); gc.canShoot = false; gc.shootTimer = 8;
+    }
+  };
+
+  const gameLoop = () => {
+    const gc = G.current; if (!gc || gc.over) return;
+    gc.time -= 0.03; if (gc.time <= 0) { gc.over = true; setTick(t => t + 1); return; }
+    if (gc.flashAge > 0) gc.flashAge--;
+    if (gc.scoreFloatAge > 0) gc.scoreFloatAge--;
+    
+    // תנועה באמצעות מקשי החצים
+    const moveSpeed = 12;
+    if (keysRef.current.up) gc.planeY = Math.max(10, gc.planeY - moveSpeed);
+    if (keysRef.current.down) gc.planeY = Math.min(gc.ch - 100, gc.planeY + moveSpeed);
+    if (keysRef.current.left) gc.planeX = Math.max(0, gc.planeX - moveSpeed);
+    if (keysRef.current.right) gc.planeX = Math.min(gc.cw - PW, gc.planeX + moveSpeed);
+
+    if (keysRef.current.space && gc.canShoot) forceShoot();
+    if (!gc.canShoot) { gc.shootTimer--; if (gc.shootTimer <= 0) gc.canShoot = true; }
+    
+    if (!gc.trans) {
+      let missed = false; gc.bubbles.forEach(b => { b.y -= b.speed; });
+      gc.bubbles = gc.bubbles.filter(b => {
+        if (b.disabled) return false;
+        if (b.y < gc.planeY + PH + 20) { if (b.correct) missed = true; return false; }
+        return true;
+      });
+      if (missed && gc.canHit) {
+        gc.canHit = false; gc.trans = true; gc.lives--; sfx('wrong');
+        if (gc.lives <= 0) gc.over = true;
+        setTimeout(() => { if (G.current) { G.current.trans = false; spawn(); } }, 500);
+      } else if (gc.bubbles.length === 0 && gc.canHit) {
+        gc.trans = true; setTimeout(() => { if (G.current) { G.current.trans = false; spawn(); } }, 100);
+      }
+    }
+    gc.bullets.forEach(b => { b.y += 20; });
+    gc.bullets = gc.bullets.filter(b => {
+      let hit = false;
+      gc.bubbles.forEach(bub => {
+        if (!bub.disabled && b.y > bub.y && b.y < bub.y + MTOTAL && b.x > bub.x && b.x < bub.x + MW) {
+          hit = true;
+          if (bub.correct) {
+            gc.score += 300; gc.canHit = false; gc.trans = true;
+            gc.flash = { x: bub.x + MW / 2, y: bub.y + MBODY / 2 }; gc.flashAge = 10;
+            gc.scoreFloat = { x: bub.x + MW / 2, y: bub.y }; gc.scoreFloatAge = 25;
+            bub.disabled = true; sfx('hit');
+            setTimeout(() => { if (G.current) { G.current.trans = false; spawn(); } }, 600);
+          } else { bub.disabled = true; sfx('wrong'); }
+        }
+      });
+      return !hit && b.y < gc.ch + 100;
+    });
+    setTick(t => t + 1);
+  };
+
+  const handleDrag = (clientX, clientY) => {
+    if (!G.current || G.current.over) return;
+    G.current.planeX = Math.max(0, Math.min(G.current.cw - PW, clientX - PW / 2));
+    G.current.planeY = Math.max(10, Math.min(G.current.ch - 100, clientY - PH / 2));
+    setTick(t => t + 1);
+  };
+
+  const handlePointerDown = (e) => {
+    if (e.target.closest('.ui-btn') || e.target.closest('.fire-btn')) return;
+    const now = Date.now(); if (now - lastTapRef.current < 300) forceShoot();
+    lastTapRef.current = now; dragActive.current = true; handleDrag(e.clientX, e.clientY);
+  };
+
+  const gc = G.current || {};
+
+  return (
+    <div style={{ inset: 0, position: 'fixed', background: '#060612', color: 'white', fontFamily: '"Rubik", sans-serif', direction: 'rtl', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&display=swap');
+        @keyframes fl1 { 0% { transform: scaleY(.85); } 100% { transform: scaleY(1.85); } }
+        @keyframes explodeRing { 0% { transform: scale(0.2); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+        @keyframes scoreFloat { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+        @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+        .ti { background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; width: 100%; outline: none; }
+        .outlined-txt { paint-order: stroke fill; }
+      `}</style>
+
+      {/* Background Stars */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
+        {Array.from({ length: 50 }).map((_, i) => (
+          <div key={i} style={{ position: 'absolute', width: 2, height: 2, background: 'white', borderRadius: '50%', top: Math.random() * 100 + '%', left: Math.random() * 100 + '%', opacity: Math.random() }} />
+        ))}
+      </div>
+
+      {/* Screens */}
+      {screen === 'welcome' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 5, padding: 20 }}>
+          <div style={{ background: 'rgba(10,10,25,0.8)', padding: '40px 20px', borderRadius: '30px', border: `2px solid ${C.pu}`, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '700px', width: '100%' }}>
+            <h1 className="outlined-txt" style={{ fontSize: 'clamp(40px, 8vw, 80px)', fontWeight: 900, margin: '0 0 10px 0', color: 'white', WebkitTextStroke: '2px #000', textAlign: 'center' }}>להפיל את הטיל</h1>
+            <div style={{ margin: '20px 0' }}>{PLANE_SVG}</div>
+            <div style={{ background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: 15, border: `1px solid ${C.pu}55`, textAlign: 'center', marginBottom: 25, width: '90%' }}>
+              <p style={{ margin: 5, fontSize: 18 }}>👆 <b>תנועה:</b> חצים במקלדת (←↑↓→) או גרירה.</p>
+              <p style={{ margin: 5, fontSize: 18 }}>🎯 <b>ירי:</b> מקש רווח (Space) או כפתור "אש!".</p>
+            </div>
+            <button onClick={() => setScreen('menu')} style={{ background: `linear-gradient(135deg, ${C.gr}, ${C.grD})`, color: 'black', padding: '18px 60px', borderRadius: 50, fontSize: 24, fontWeight: 900, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>כניסה לתפריט</button>
+          </div>
+          <div style={{ marginTop: 25 }}><Credit /></div>
+        </div>
+      )}
+
+      {screen === 'menu' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '40px 20px', overflowY: 'auto', zIndex: 5 }}>
+          <div style={{ maxWidth: 800, margin: '0 auto', width: '100%' }}>
+            <div style={{ background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '20px', marginBottom: '30px', border: `3px solid ${C.gr}`, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 15, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 18, fontWeight: 'bold' }}>מהירות:</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {['low', 'medium', 'high'].map(s => (
+                    <button key={s} onClick={() => setGameSpeed(s)} style={{ background: gameSpeed === s ? C.pu : '#222', color: 'white', border: '1px solid #444', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>{s === 'low' ? '🐢' : s === 'medium' ? '🚶' : '🚀'}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 15, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 18, fontWeight: 'bold' }}>זמן:</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[60, 90, 120].map(t => (
+                    <button key={t} onClick={() => setGameDuration(t)} style={{ background: gameDuration === t ? C.pu : '#222', color: 'white', border: '1px solid #444', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>{t/60} ד'</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 15 }}>
+              {PREBUILT.map(t => (
+                <div key={t.id} onClick={() => startGame(t)} style={{ background: 'rgba(20,20,20,0.8)', border: `2px solid ${C.pu}`, padding: 20, borderRadius: 20, cursor: 'pointer', textAlign: 'center' }}>
+                  <span style={{ fontSize: 36 }}>{t.icon}</span>
+                  <h4 style={{ margin: '10px 0', fontSize: 20 }}>{t.label}</h4>
+                </div>
+              ))}
+              <div onClick={() => setScreen('custom')} style={{ background: 'rgba(20,20,20,0.8)', border: `1px dashed ${C.pu}`, padding: 20, borderRadius: 20, cursor: 'pointer', textAlign: 'center' }}>
+                <span style={{ fontSize: 36 }}>✏️</span>
+                <h4 style={{ margin: '10px 0', fontSize: 20, color: C.pu }}>נושא אישי</h4>
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: 'auto', paddingTop: 40, textAlign: 'center' }}>
+            <button onClick={() => setScreen('welcome')} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 16, fontFamily: 'inherit' }}>← חזרה</button>
+            <div style={{ marginTop: 20 }}><Credit /></div>
+          </div>
+        </div>
+      )}
+
+      {screen === 'game' && (
+        <div ref={skyRef} tabIndex={0} onPointerDown={handlePointerDown} onPointerMove={e => dragActive.current && handleDrag(e.clientX, e.clientY)} onPointerUp={() => dragActive.current = false} style={{ flex: 1, position: 'relative', background: 'linear-gradient(180deg,#1a237e 0%,#42a5f5 100%)', touchAction: 'none', outline: 'none' }}>
+          <button className="ui-btn" onClick={() => setSoundOn(!soundOn)} style={{ position: 'absolute', top: 15, left: 15, background: 'rgba(255,255,255,0.1)', border: 'none', fontSize: 24, cursor: 'pointer', zIndex: 999, borderRadius: '50%', width: 45, height: 45 }}>{soundOn ? '🔊' : '🔇'}</button>
+          
+          <div style={{ position: 'absolute', top: 60, left: 0, right: 0, display: 'flex', justifyContent: 'space-between', padding: '0 20px', pointerEvents: 'none' }}>
+             <div style={{ background: 'rgba(0,0,0,0.6)', padding: '8px 20px', borderRadius: 15, border: `1px solid ${C.pu}44`, pointerEvents: 'auto' }}>❤️ {gc.lives ?? 5} | 🎯 {gc.score ?? 0} | ⏳ {Math.ceil(gc.time ?? 0)}</div>
+             <button className="ui-btn" onClick={() => { clearInterval(loopRef.current); setScreen('menu'); }} style={{ background: 'rgba(0,0,0,0.6)', border: `1px solid ${C.pu}44`, color: 'white', padding: '5px 15px', borderRadius: 10, cursor: 'pointer', pointerEvents: 'auto', fontFamily: 'inherit' }}>🏠 תפריט</button>
+          </div>
+
+          <div style={{ position: 'absolute', top: 110, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', pointerEvents: 'none' }}>
+            <div style={{ fontSize: 22, color: '#00ffff', fontWeight: 900 }}>{gc.topic?.label}</div>
+            <div className="outlined-txt" style={{ fontSize: 48, fontWeight: 900, color: C.pk, WebkitTextStroke: '2.5px black' }}>{gc.currentQ?.word}</div>
+            {gc.currentQ?.hint && <div style={{ fontSize: 16, color: '#ffe066', background: 'rgba(0,0,0,0.5)', padding: '2px 10px', borderRadius: 10, marginTop: 5 }}>💡 {gc.currentQ.hint}</div>}
+          </div>
+
+          <button className="fire-btn" onPointerDown={e => { e.stopPropagation(); forceShoot(); }} style={{ position: 'absolute', bottom: 30, right: 30, width: 80, height: 80, borderRadius: '50%', background: C.pu, border: '3px solid white', color: 'white', fontSize: 20, fontWeight: 'bold', zIndex: 100, fontFamily: 'inherit' }}>אש!</button>
+          
+          {/* קרדיט בתבנית לבנה מלבנית למסך המשחק */}
+          <div style={{ position: 'absolute', bottom: 15, left: 15, background: 'rgba(255, 255, 255, 0.95)', padding: '2px 12px', borderRadius: '8px', zIndex: 100, border: '2px solid #ccc' }}>
+            <Credit style={{ fontSize: 14, color: '#111', padding: 0 }} />
+          </div>
+
+          <div style={{ position: 'absolute', top: gc.planeY, left: gc.planeX, pointerEvents: 'none' }}>{PLANE_SVG}</div>
+          {gc.flash && <div style={{ position: 'absolute', left: gc.flash.x - 70, top: gc.flash.y - 70, width: 140, height: 140, border: '3px solid #ff0', borderRadius: '50%', animation: 'explodeRing 0.5s ease-out forwards' }} />}
+          {gc.bullets?.map(b => <div key={b.id} style={{ position: 'absolute', left: b.x-5, top: b.y, width: 10, height: 30, background: '#ff0', borderRadius: 5 }} />)}
+          {gc.bubbles?.map(b => <div key={b.id} style={{ position: 'absolute', left: b.x, top: b.y, opacity: b.disabled ? 0.3 : 1 }}><Missile word={b.word} disabled={b.disabled} /></div>)}
+
+          {gc.over && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+              <Confetti />
+              <div style={{ background: 'rgba(10,10,25,0.95)', padding: '50px 20px', borderRadius: '30px', border: `2px solid ${C.pu}`, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '500px', width: '90%' }}>
+                <h1 style={{ fontSize: 60, color: C.gr }}>כל הכבוד!</h1>
+                <div style={{ fontSize: 30, marginBottom: 40 }}>ציון: {gc.score}</div>
+                <div style={{ display: 'flex', gap: 20 }}>
+                  <button onClick={() => startGame(gc.topic)} style={{ background: C.pu, color: 'white', padding: '15px 30px', borderRadius: 12, fontSize: 20, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>שוב</button>
+                  <button onClick={() => setScreen('menu')} style={{ background: '#333', color: 'white', padding: '15px 30px', borderRadius: 12, fontSize: 20, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>תפריט</button>
+                </div>
+              </div>
+              <div style={{ position: 'absolute', bottom: 30 }}><Credit /></div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {screen === 'custom' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '60px 20px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: 700, margin: '0 auto', width: '100%', background: 'rgba(20,20,20,0.9)', padding: 30, borderRadius: 20, border: `1px solid ${C.pu}55` }}>
+            <h2 style={{ textAlign: 'center', color: C.pk, marginBottom: 20 }}>מחולל נושאים</h2>
+            <input className="ti" style={{fontFamily: 'inherit'}} placeholder="שם הנושא" value={customName} onChange={e => setCustomName(e.target.value)} />
+            <div style={{height: 20}} />
+            <EditorTable rows={customRows} customName={customName} updateRow={(id, f, v) => setCustomRows(rs => rs.map(r => r.id === id ? { ...r, [f]: v } : r))} setRows={setCustomRows} customValid={customRows.filter(r => r.word && r.correct).length >= 4} startGame={startGame} />
+            <button onClick={() => setScreen('menu')} style={{ width: '100%', background: 'none', border: 'none', color: '#888', marginTop: 20, cursor: 'pointer', fontFamily: 'inherit' }}>← ביטול</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
